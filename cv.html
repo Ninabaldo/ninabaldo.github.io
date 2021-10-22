@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="/assets/css/style.css">
+
+    <style type="text/css" media="print">
+        .noprint {
+            display: none
+        }
+        
+        .print {
+            display: block !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <header class="el-header noprint">
+            <div class="icon-btns">
+                <i class="icon-list" @click="changeLeftMenu"></i>
+                <i class="icon-skip_previous" v-bind:class="{'disabled': currentPage == 1}" @click="changeCurrentPage('first')"></i>
+                <i class="icon-play_arrow prev-icon" v-bind:class="{'disabled': currentPage == 1}" @click="changeCurrentPage('prev')"></i>
+                <i class="icon-play_arrow" v-bind:class="{'disabled': currentPage == pageNum}" @click="changeCurrentPage('next')"></i>
+                <i class="icon-skip_next" v-bind:class="{'disabled': currentPage == pageNum}" @click="changeCurrentPage('last')"></i>
+                <select v-model="currentPage">
+                    <option v-for="page in pageNum" v-bind:value="page">page {{ page }}</option>
+                </select>
+                <i class="icon-zoom_in" v-bind:class="{'disabled': zoomNum == 2}" @click="modifyZoom('in')"></i>
+                <select v-model="zoomNum">
+                    <option value="0.5">50%</option>
+                    <option value="0.6">60%</option>
+                    <option value="0.7">70%</option>
+                    <option value="0.8">80%</option>
+                    <option value="0.9">90%</option>
+                    <option value="1.0" selected>100%</option>
+                    <option value="1.1">110%</option>
+                    <option value="1.2">120%</option>
+                    <option value="1.3">130%</option>
+                    <option value="1.4">140%</option>
+                    <option value="1.5">150%</option>
+                    <option value="1.6">160%</option>
+                    <option value="1.7">170%</option>
+                    <option value="1.8">180%</option>
+                    <option value="1.9">190%</option>
+                    <option value="2.0">200%</option>
+                </select>
+                <i class="icon-zoom_out" v-bind:class="{'disabled': zoomNum == 0.5}" @click="modifyZoom('out')"></i>
+                <i class="icon-format_align_left" @click="textAlign = 'left'"></i>
+                <i class="icon-format_align_center" @click="textAlign = 'center'"></i>
+                <i class="icon-format_align_right" @click="textAlign = 'right'"></i>
+                <i class="icon-print" @click="window.print()"></i>
+            </div>
+        </header>
+
+        <aside class="noprint" width="240px" v-show="ifMenuShow">
+            <nav class="tabNav">
+                <ul>
+                    <li v-bind:class="{ 'curr': currentNav == 0 }" @click="currentNav = 0">Page</li>
+                    <li v-bind:class="{ 'curr': currentNav == 1 }" @click="currentNav = 1">Bookmark</li>
+                </ul>
+
+                <div class="clear"></div>
+            </nav>
+
+            <div class="tab-conent scrollbar" v-bind:style="{ height: asideHeight + 'px' }">
+
+            <section v-show="currentNav == 0">
+                <ul class="page-menu">
+                    <li v-for="page in pageNum" v-bind:class="{ 'curr': currentPage == page }" @click="changePage(page)"><i class="icon-file-text2"></i> page {{ page }}</li>
+                </ul>
+            </section>
+
+            <section v-show="currentNav == 1">
+                <ul class="page-menu">
+                    <li v-for="page in pageNum" v-bind:class="{ 'curr': currentPage == page }" @click="changePage(page)"><i class="icon-turned_in_not"></i> Bookmark {{ page }}</li>
+                </ul>
+            </section>
+        </div>
+
+        </aside>
+        <div class="main scrollbar noprint"  v-bind:style="{ height: mainHeight + 'px' }" v-bind:class="{ 'mainLeftM': ifMenuShow, 'aleft': textAlign === 'left','acenter': textAlign === 'center','aright': textAlign === 'right'}">
+            <div class="conent" v-html="pageContent" v-bind:style="zoomStyle"></div>
+
+            <div class="clear"></div>
+        </div>
+
+        <!--专门只为打印的内容-->
+        <div class="conent print" style="display:none" v-html="pageContent"></div>
+    </div>
+</body>
+<!-- CV Vue -->
+
+            <script src="assets/js/jquery.min.js"></script>
+			<script src="assets/js/jquery.scrollex.min.js"></script>
+			<script src="assets/js/jquery.scrolly.min.js"></script>
+			<script src="assets/js/browser.min.js"></script>
+			<script src="assets/js/breakpoints.min.js"></script>
+			<script src="assets/js/util.js"></script>
+			<script src="assets/js/main.js"></script>
+            <script src="assets/js/vue.min.js"></script>
+<script>
+
+var app = new Vue({
+        el: '#app',
+        data: function() {
+            return {
+                // visible: false,
+                isCollapse: false,
+                currentNav: 0,
+                activeName2: 'first',
+                pageNum: 1, 
+                currentPage: 1,
+                pageContent: '',
+                asideHeight: 300,
+                mainHeight: 300,
+                ifMenuShow: true,
+                zoomNum: '1.0',
+                textAlign: 'left',
+                zoomStyle: {},
+                pageDatas: ['<div style="position:absolute;top:0.000000px;left:0.000000px"><nobr><img height="1123.000000" width="794.000000" src ="bgimg/bg00001.jpg"/></nobr></div><p><span style="font-family:Arial;font-size:10.097517px;font-weight:bold;color:#D0826F;"><span style="position:absolute;top:337.446136px;left:296.951385px"><nobr>A BO U T </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.075093px;font-style:normal;font-weight:normal;color:#263547;"><span style="position:absolute;top:372.079254px;left:296.951324px"><nobr>Web developer with previous experience in the field of health, eager to grow </nobr></span><span style="position:absolute;top:386.677155px;left:296.951324px"><nobr>in the tech industry. </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.075093px;font-style:normal;font-weight:normal;color:#263547;"><span style="position:absolute;top:401.275238px;left:296.951324px"><nobr>I just finished the Full Stack developer bootcamp in order to start a new </nobr></span><span style="position:absolute;top:415.873199px;left:296.951324px"><nobr>professional career. </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.075093px;font-style:normal;font-weight:normal;color:#263547;"><span style="position:absolute;top:430.471283px;left:296.951324px"><nobr>I have carried out two projects ** with the technologies and methodologies </nobr></span><span style="position:absolute;top:445.069183px;left:296.951324px"><nobr>acquired. </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.075093px;font-style:normal;font-weight:normal;color:#263547;"><span style="position:absolute;top:459.667267px;left:296.951324px"><nobr>My background experience, continues to provide me with knowledge and </nobr></span><span style="position:absolute;top:474.265259px;left:296.951324px"><nobr>skills such as meticulousness, precision, the development of a more logical </nobr></span><span style="position:absolute;top:488.863281px;left:296.951324px"><nobr>and intuitive mind, and having a good capacity for adaptation and great </nobr></span><span style="position:absolute;top:503.461304px;left:296.951324px"><nobr>experience with human treatment. </nobr></span></span></p><p><span style="font-family:Arial;font-size:10.097517px;font-weight:bold;color:#D0826F;"><span style="position:absolute;top:531.800110px;left:296.951324px"><nobr>WORK EXPERIENCE </nobr></span></span></p><p><span style="font-family:Arial;font-size:10.097517px;font-weight:bold;color:#263547;"><span style="position:absolute;top:360.725830px;left:69.341850px"><nobr>CONTACT </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.075093px;font-style:normal;font-weight:normal;color:#263547;"><span style="position:absolute;top:395.358978px;left:72.203873px"><nobr>+34 606592980 </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.075093px;font-style:normal;font-weight:normal;color:#263547;"><span style="position:absolute;top:424.554932px;left:68.854683px"><nobr>nbaldorousseau@gmail.com </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.075093px;font-style:normal;font-weight:normal;color:#263547;"><span style="position:absolute;top:453.750916px;left:68.854683px"><nobr>github.com/Ninabaldo/ </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.075093px;font-style:normal;font-weight:normal;color:#263547;"><span style="position:absolute;top:482.946991px;left:68.854683px"><nobr>in/ninabaldorousseau </nobr></span></span></p><p><span style="font-family:Arial;font-size:10.097517px;font-weight:bold;color:#263547;"><span style="position:absolute;top:531.800110px;left:38.777901px"><nobr>T E C HNOLO G IES &amp; </nobr></span><span style="position:absolute;top:546.398132px;left:38.777901px"><nobr>METHODOLOGIES </nobr></span></span></p><p><span style="font-family:Arial;font-size:28.284733px;font-style:normal;font-weight:normal;color:#D0826F;"><span style="position:absolute;top:232.855881px;left:289.995483px"><nobr>N I N A B A L D <span style="font-family:Arial Unicode MS;">Ó </span></nobr></span></span></p><p><span style="font-family:Arial;font-size:12.119941px;font-style:normal;font-weight:normal;color:#D0826F;"><span style="position:absolute;top:296.081787px;left:296.701782px"><nobr>F ULL S T ACK DEVELOPER </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.075093px;font-style:normal;font-weight:normal;color:#263547;"><span style="position:absolute;top:918.848938px;left:39.414944px"><nobr>French | Native </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.075093px;font-style:normal;font-weight:normal;color:#263547;"><span style="position:absolute;top:933.447021px;left:39.414944px"><nobr>Spanish | Excelent </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.075093px;font-style:normal;font-weight:normal;color:#263547;"><span style="position:absolute;top:948.045044px;left:39.414944px"><nobr>Catalan | Native </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.075093px;font-style:normal;font-weight:normal;color:#263547;"><span style="position:absolute;top:962.643005px;left:39.414944px"><nobr>English | Fluid </nobr></span></span></p><p><span style="font-family:Arial;font-size:10.097517px;font-weight:bold;color:#263547;"><span style="position:absolute;top:883.934692px;left:39.902100px"><nobr>LANGUEGES </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.081482px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:717.050476px;left:290.385193px"><nobr>FULL STACK DEVELOPEMT BOOTCAMP </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.075093px;font-style:normal;font-weight:normal;color:#263547;"><span style="position:absolute;top:733.301453px;left:290.385193px"><nobr>IRONHACK Barcelona |2021 </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.075093px;font-style:normal;font-weight:normal;color:#263547;"><span style="position:absolute;top:756.074219px;left:324.071869px"><nobr>React JS, Node.js,Express.js, MongoDB, Mongoose,HTML, CSS, </nobr></span><span style="position:absolute;top:770.672180px;left:324.071869px"><nobr>SCSS/SASS, JSX,REST API, Javascript &amp; more </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.081482px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:796.563171px;left:289.995483px"><nobr>DEGREE IN PHISIOTERAPHY </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.075093px;font-style:normal;font-weight:normal;color:#263547;"><span style="position:absolute;top:812.813965px;left:289.995483px"><nobr>BLANQUERNA Barcelona| 2018-2021 </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.075093px;font-style:normal;font-weight:normal;color:#263547;"><span style="position:absolute;top:835.586914px;left:323.682190px"><nobr>Practices in different hospitals and clinics on different disciplines. </nobr></span><span style="position:absolute;top:850.184875px;left:323.682190px"><nobr>Traumatology, sports, neurology, pediatrics, geriatrics. </nobr></span></span></p><p><span style="font-family:Arial;font-size:10.097517px;font-weight:bold;color:#D0826F;"><span style="position:absolute;top:682.950012px;left:289.995483px"><nobr>EDUCATION </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.081482px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:892.117981px;left:289.995483px"><nobr>HIGHER GRADE IN PHATOLOGICAL ANATOMY AND CYTODIAGNOSIS </nobr></span><span style="position:absolute;top:908.368835px;left:289.995483px"><nobr><span style="font-size:8.075093px;color:#263547;">FORMAT Barcelona| 2016-2018 </span></nobr></span></span></p><p><span style="font-family:Arial;font-size:8.075093px;font-style:normal;font-weight:normal;color:#263547;"><span style="position:absolute;top:931.141479px;left:323.682190px"><nobr>Laboratory technician in Pathological Anatomy and Cytodiagnosis. </nobr></span><span style="position:absolute;top:945.739502px;left:323.682190px"><nobr>control, handling and processing of samples and biological requests. </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.081482px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:1005.621948px;left:289.995483px"><nobr>MIDDLE GRADE IN SANITARY EMERGENCY </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.075093px;font-style:normal;font-weight:normal;color:#263547;"><span style="position:absolute;top:1021.872803px;left:289.995483px"><nobr>JESUITES Barcelona| 2014-2016 </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.075093px;font-style:normal;font-weight:normal;color:#263547;"><span style="position:absolute;top:1044.645630px;left:323.682190px"><nobr>Technician in Health Emergencies of Basic Life Support, urgent and </nobr></span><span style="position:absolute;top:1059.243652px;left:323.682190px"><nobr>non-urgent transport of patients with out-of-hospital primary care </nobr></span><span style="position:absolute;top:1073.841553px;left:323.682190px"><nobr>needs. </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.081482px;font-style:normal;font-weight:normal;color:#D0826F;"><span style="position:absolute;top:567.934021px;left:290.385193px"><nobr>ADMINISTRATIVE RECEPTIONIST SPORTS CLUB </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.075093px;font-style:normal;font-weight:normal;color:#263547;"><span style="position:absolute;top:584.184998px;left:290.385193px"><nobr>FIbra sports and wellness Barcelona |2018-2020 </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.081482px;font-style:normal;font-weight:normal;color:#D0826F;"><span style="position:absolute;top:608.710876px;left:290.385193px"><nobr>HEALTH EMERGENCY TECHNICIAN </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.075093px;font-style:normal;font-weight:normal;color:#263547;"><span style="position:absolute;top:624.961853px;left:290.385193px"><nobr>TSC Barcelona |2016 </nobr></span></span></p><p><span style="font-family:Arial;font-size:10.097517px;font-weight:bold;color:#263547;"><span style="position:absolute;top:991.947815px;left:38.850815px"><nobr>** </nobr></span></span></p><p><span style="font-family:Arial;font-size:10.065944px;font-style:italic;font-weight:bold;text-decoration:underline;color:#D0826F;"><span style="position:absolute;top:1020.041565px;left:39.414944px"><nobr><a href="https://ninabaldo.github.io/Game-Project-1/" target="_blank">Tic tac toe - Web game </a></nobr></span><span style="position:absolute;top:1049.813965px;left:39.414944px"><nobr><a href="https://colored-id.herokuapp.com/" target="_blank">Colored ID - Web app </a></nobr></span></span></p>','<div style="position:absolute;top:0.000000px;left:0.000000px"><nobr><img height="1123.000000" width="794.000000" src ="bgimg/bg00002.jpg"/></nobr></div><p><span style="font-family:Arial;font-size:8.075093px;font-style:normal;font-weight:normal;color:#263547;"><span style="position:absolute;top:339.325104px;left:296.951324px"><nobr>Programadora web con previa experiencia en el ámbito de la sanidad, con </nobr></span><span style="position:absolute;top:353.923096px;left:296.951324px"><nobr>muchas ganas crecer en el sector de la industria tecnológica. </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.075093px;font-style:normal;font-weight:normal;color:#263547;"><span style="position:absolute;top:368.521149px;left:296.951324px"><nobr>Actualmente, habiendo finalizado el bootcamp de Full Stack developer con el </nobr></span><span style="position:absolute;top:383.119049px;left:296.951324px"><nobr>fin de iniciar una nueva carrera profesional, busco una empresa donde </nobr></span><span style="position:absolute;top:397.717133px;left:296.951324px"><nobr>aprender y crecer profesionalmente como dessarrolladora web. </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.075093px;font-style:normal;font-weight:normal;color:#263547;"><span style="position:absolute;top:412.315094px;left:296.951324px"><nobr>He realizado dos proyectos** con las tecnologías y metodologías adquiridas. </nobr></span><span style="position:absolute;top:426.913177px;left:296.951324px"><nobr>Mi previa experiencia como profesional de la salud en diferentes campos, me </nobr></span><span style="position:absolute;top:441.511078px;left:296.951324px"><nobr>sigue aportando conocimientos y habilidades como la meticulosidad, la </nobr></span><span style="position:absolute;top:456.109161px;left:296.951324px"><nobr>precisión, el desarrollo de una mente más lógica e intuitiva, y tener una buena </nobr></span><span style="position:absolute;top:470.707184px;left:296.951324px"><nobr>capacidad de adaptación y una gran experiencia con el trato humano. </nobr></span></span></p><p><span style="font-family:Arial;font-size:10.095969px;font-weight:bold;color:#8694D4;"><span style="position:absolute;top:540.278748px;left:289.995483px"><nobr>E X P E R I E N C I A P R O F E S I O N A L </nobr></span></span></p><p><span style="font-family:Arial;font-size:10.097517px;font-weight:bold;color:#263547;"><span style="position:absolute;top:360.725983px;left:69.341850px"><nobr>C O N T A C T O </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.075093px;font-style:normal;font-weight:normal;color:#263547;"><span style="position:absolute;top:395.640472px;left:72.203873px"><nobr>+34 606592980 </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.075093px;font-style:normal;font-weight:normal;color:#263547;"><span style="position:absolute;top:424.836426px;left:68.854683px"><nobr>nbaldorousseau@gmail.com </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.075093px;font-style:normal;font-weight:normal;color:#263547;"><span style="position:absolute;top:454.032440px;left:68.854683px"><nobr>github.com/Ninabaldo/ </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.075093px;font-style:normal;font-weight:normal;color:#263547;"><span style="position:absolute;top:483.228455px;left:68.854683px"><nobr>in/ninabaldorousseau </nobr></span></span></p><p><span style="font-family:Arial;font-size:10.097517px;font-weight:bold;color:#263547;"><span style="position:absolute;top:531.800232px;left:38.777901px"><nobr>T E C H N O L O G I A S &amp; </nobr></span><span style="position:absolute;top:546.398193px;left:38.777901px"><nobr>M E T H O D O L O G I A S </nobr></span></span></p><p><span style="font-family:Arial;font-size:28.283728px;font-style:normal;font-weight:normal;color:#8694D4;"><span style="position:absolute;top:233.693848px;left:289.995483px"><nobr>N I N A B A L D <span style="font-family:Arial Unicode MS;">Ó </span></nobr></span></span></p><p><span style="font-family:Arial;font-size:12.115165px;font-style:normal;font-weight:normal;color:#8694D4;"><span style="position:absolute;top:295.470459px;left:296.701782px"><nobr>F U L L S T A C K D E V E L O P E R </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.075093px;font-style:normal;font-weight:normal;color:#263547;"><span style="position:absolute;top:918.849182px;left:39.414944px"><nobr>French | Nativo </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.075093px;font-style:normal;font-weight:normal;color:#263547;"><span style="position:absolute;top:933.447144px;left:39.414944px"><nobr>Spanish | Excelente </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.075093px;font-style:normal;font-weight:normal;color:#263547;"><span style="position:absolute;top:948.045166px;left:39.414944px"><nobr>Catalan | Nativo </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.075093px;font-style:normal;font-weight:normal;color:#263547;"><span style="position:absolute;top:962.643250px;left:39.414944px"><nobr>English | Fluido </nobr></span></span></p><p><span style="font-family:Arial;font-size:10.097517px;font-weight:bold;color:#263547;"><span style="position:absolute;top:883.934814px;left:39.902100px"><nobr>I D I O M A S </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.081482px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:714.505981px;left:299.891510px"><nobr>FULL STACK DEVELOPER BOOTCAMP </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.075093px;font-style:normal;font-weight:normal;color:#263547;"><span style="position:absolute;top:730.756958px;left:299.891510px"><nobr>IRONHACK Barcelona |2021 </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.075093px;font-style:normal;font-weight:normal;color:#263547;"><span style="position:absolute;top:753.529785px;left:333.578186px"><nobr>React JS, Node.js,Express.js, MongoDB, Mongoose,HTML, CSS, </nobr></span><span style="position:absolute;top:768.127747px;left:333.578186px"><nobr>SCSS/SASS, JSX,REST API, Javascript &amp; more </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.081482px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:794.018372px;left:299.501831px"><nobr>GRADO EN FISIOTERAPIA </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.075093px;font-style:normal;font-weight:normal;color:#263547;"><span style="position:absolute;top:810.269348px;left:299.501831px"><nobr>BLANQUERNA Barcelona| 2018-2021 </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.075093px;font-style:normal;font-weight:normal;color:#263547;"><span style="position:absolute;top:833.042297px;left:333.188507px"><nobr>Practicas en distintos hospitals y cliínicas en varias disciplinas. </nobr></span><span style="position:absolute;top:847.640320px;left:333.188507px"><nobr>Traumatología, deporte, neurología, geriatría. </nobr></span></span></p><p><span style="font-family:Arial;font-size:10.095969px;font-weight:bold;color:#8694D4;"><span style="position:absolute;top:682.307068px;left:289.995483px"><nobr>E D UCACIÓN </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.081482px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:889.573364px;left:299.501831px"><nobr>GRADO SUPERIOR EN ANATOMÍA PATOLÓGÍCA Y CITODIAGNÓSTICO </nobr></span><span style="position:absolute;top:905.824219px;left:299.501831px"><nobr><span style="font-size:8.075093px;color:#263547;">FORMAT Barcelona| 2016-2018 </span></nobr></span></span></p><p><span style="font-family:Arial;font-size:8.075093px;font-style:normal;font-weight:normal;color:#263547;"><span style="position:absolute;top:928.597229px;left:333.188507px"><nobr>Técnico de laboratorio en Anatomía Patológica y Citodiagnóstico </nobr></span><span style="position:absolute;top:943.195068px;left:333.188507px"><nobr>Control, manejo y procesamiento de muestras y tejidos biológicos, para </nobr></span><span style="position:absolute;top:957.793213px;left:333.188507px"><nobr>su posterior diagnóstico . </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.081482px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:1003.077454px;left:299.501831px"><nobr>GRADO MEDIO EN EMERGENCIAS SANITARIAS </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.075093px;font-style:normal;font-weight:normal;color:#263547;"><span style="position:absolute;top:1019.328369px;left:299.501831px"><nobr>JESUITES Barcelona| 2014-2016 </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.075093px;font-style:normal;font-weight:normal;color:#263547;"><span style="position:absolute;top:1042.101074px;left:333.188507px"><nobr>Técnico de emergencias sanitarias, en transporte urgente y no urgente </nobr></span><span style="position:absolute;top:1056.698975px;left:333.188507px"><nobr>para pacientes con necesidades extra hospitalarias. </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.081482px;font-style:normal;font-weight:normal;color:#8694D4;"><span style="position:absolute;top:568.051636px;left:299.501831px"><nobr>ADMINISTRATIVA RECEPCIONISTA EN CLUB DEPORTIVO </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.075093px;font-style:normal;font-weight:normal;color:#263547;"><span style="position:absolute;top:584.302795px;left:299.501831px"><nobr>FIbra sports and wellness Barcelona |2017-2020 </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.081482px;font-style:normal;font-weight:normal;color:#8694D4;"><span style="position:absolute;top:608.710999px;left:299.501831px"><nobr>TÉCNICO DE EMERGENCIAS SANITARIAS </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.075093px;font-style:normal;font-weight:normal;color:#263547;"><span style="position:absolute;top:624.961914px;left:299.501831px"><nobr>TSC Barcelona |2016 </nobr></span></span></p><p><span style="font-family:Arial;font-size:10.097517px;font-weight:bold;color:#263547;"><span style="position:absolute;top:991.947693px;left:38.850815px"><nobr>** </nobr></span></span></p><p><span style="font-family:Arial;font-size:10.065944px;font-style:italic;font-weight:bold;text-decoration:underline;color:#8694D4;"><span style="position:absolute;top:1020.041748px;left:39.414944px"><nobr><a href="https://ninabaldo.github.io/Game-Project-1/" target="_blank">Tic tac toe - Web game </a></nobr></span><span style="position:absolute;top:1049.813965px;left:39.414944px"><nobr><a href="https://colored-id.herokuapp.com/" target="_blank">Colored ID - Web app </a></nobr></span></span></p>']
+            }
+        },
+        mounted: function() {
+            this.$nextTick(function() {
+                this.pageNum = this.pageDatas.length;
+                this.pageContent = this.pageDatas[0];
+
+                this.setLeftMenuHeight();
+            })
+        },
+        watch: {
+            'currentPage': function(newVal, oldValue) {
+                // console.log('newVal ' + newVal, 'oldValue ' + oldValue);
+                if (newVal) {
+                    this.pageContent = this.pageDatas[this.currentPage - 1];
+                }
+            },
+            'zoomNum': function(newVal, oldValue) {
+                if (newVal) {
+                    this.zoomStyle = {
+                        'transform': 'scale(' + newVal + ')',
+                        '-webkit-transform': 'scale(' + newVal + ')',
+                        '-ms-transform': 'scale(' + newVal + ')',
+                        '-moz-transform': 'scale(' + newVal + ')',
+                        '-o-transform': 'scale(' + newVal + ')'
+                    }
+                }
+            }
+        },
+        methods: {
+            
+            changeCurrentPage: function(methods) {
+                switch (methods) {
+                    case 'first':
+                        this.currentPage = 1;
+                        break;
+                    case 'prev':
+                        if (this.currentPage > 1) {
+                            this.currentPage -= 1;
+                        }
+                        break;
+                    case 'next':
+                        if (this.currentPage < this.pageNum) {
+                            this.currentPage += 1;
+                        }
+                        break;
+                    case 'last':
+                        this.currentPage = this.pageNum;
+                        break;
+                }
+            },
+
+            gotoPage: function(page) {
+                console.log(page);
+                this.currentPage = page;
+            },
+            modifyZoom: function(type) {
+                switch (type) {
+                    case 'in':
+                        if (this.zoomNum < 2) {
+                            // this.zoomNum = (this.zoomNum + 0.1).toFixed(1);
+                            this.zoomNum = (parseFloat(this.zoomNum) + 0.1).toFixed(1);
+                        }
+                        break;
+                    case 'out':
+                        if (this.zoomNum > 0.5) {
+                            this.zoomNum = (parseFloat(this.zoomNum) - 0.1).toFixed(1);
+                        }
+                        break;
+                    default:
+                        break;
+                }
+                console.log(this.zoomNum);
+            },
+            setLeftMenuHeight: function() {
+                // this.asideHeight = document.body.scrollHeight - 60;
+                this.mainHeight = document.documentElement.clientHeight - 60 - 20;
+                // 60为头部导航高度， 46为menu高度， 40为上下padding
+                this.asideHeight = this.mainHeight - 20 - 46;
+            },
+            changePage: function(page) {
+                this.currentPage = page;
+                // this.pageContent = this.pageDatas[page - 1];
+            },
+            changeLeftMenu: function() {
+                this.ifMenuShow = !this.ifMenuShow;
+            }
+        }
+    });
+
+function gotoPage(page) {
+    console.log(page);
+    app.gotoPage(page);
+}
+         
+           
+</script>
+
+</html>
